@@ -1,4 +1,4 @@
-# Binary Digits
+# 🔎 Binary Digits
 
 ## 📌 Información del reto
 
@@ -10,111 +10,86 @@
 
 > This file doesn't look like much... just a bunch of 1s and 0s. But maybe it's not just random noise. Can you recover anything meaningful from this?
 
-El reto proporciona un archivo binario cuyo contenido está compuesto por cadenas de `0` y `1`. El objetivo es recuperar la información original a partir de esos bits.
+## 🔍 Opciones a tomar
+
+- Al ser un archivo `.bin` podemos hacer un `cat` para verificar su contenido (que serían muchos bits de `0` y `1`).
+- Si pensamos en que hay algún mensaje en dicho archivo, tenemos que recordar algunas cosas:
+
+  - **ASCII estándar:** utiliza 7 bits y puede representar **128 valores** (`0–127`). Existe una versión extendida de 8 bits que se suele denominar "extended ASCII", pero no constituye un estándar único y universal de 256 caracteres. En este reto, además, estamos trabajando con **bytes de 8 bits**, que pueden representar 256 valores (`0–255`).
+  - Podemos separar el contenido en cadenas de 8 bits para luego traducirlas y ver los caracteres y si hay algún mensaje dentro.
 
 ---
 
-## 1. Análisis inicial
+Para ejecutar todo esto de manera fácil podemos emplear la herramienta `CyberChef`, que nos permitirá codificar, decodificar y manipular los datos de un archivo de distintas formas.
 
-Al tratarse de un archivo `.bin`, podemos inspeccionar su contenido desde la terminal. Si observamos una gran cantidad de `0` y `1`, una posibilidad es que estos bits representen bytes.
+Para ello, copiamos el contenido del archivo `.bin` en el `input` del panel.
 
-Un byte está compuesto por **8 bits**, por lo que podemos agrupar el contenido en bloques de ocho bits y convertir cada bloque a un valor correspondiente.
+Luego debemos emplear la operación `From Binary`, que nos permite tomar una secuencia de ceros y unos y convertirla a los bytes correspondientes. Entre sus atributos tenemos:
 
-> **Nota:** ASCII estándar utiliza 7 bits y define 128 caracteres. En este reto, sin embargo, trabajaremos con bytes de 8 bits, ya que la secuencia de bits termina representando los bytes de un archivo JPEG.
-
----
-
-## 2. Conversión con CyberChef
-
-Una forma sencilla de realizar la conversión es utilizar **CyberChef**.
-
-Copiamos el contenido del archivo `.bin` en el panel de entrada y utilizamos la operación **From Binary**.
-
-### Parámetros importantes
-
-- **Delimiter:** indica cómo están separados los grupos de bits. En este reto debemos seleccionar la opción correspondiente al formato del contenido.
-- **Byte Length:** indica cuántos bits forman cada unidad. Para trabajar con bytes utilizamos `8`.
-
-![Configuración de From Binary](assets/image-20260915184812-nns0ikj.png)
-
-Después de realizar la conversión, podemos obtener caracteres que no parecen texto legible. Esto no significa necesariamente que la conversión haya fallado: los bytes obtenidos pueden pertenecer a otro tipo de archivo.
-
-Guardamos la salida obtenida como un archivo binario para conservar los bytes originales.
-
-![Guardar la salida](assets/image-20260917104541-78f3sk3.png)
-
-![Resultado de la conversión](assets/image-20260917103250-dbendat.png)
+- `Delimiter`: Define el carácter o separador que se utiliza para separar un bloque de binario de otro dentro de la cadena de entrada. Es decir, cómo se separan los bloques de bits. Puede ser todo seguido (`None`), separado por un espacio (`Space`), u otras opciones como saltos de línea, comas u otros caracteres especiales.
+- `Byte Length`: Es la longitud de estas cadenas; especifica de cuántos `1` y `0` están conformadas las cadenas, donde cada cadena representa un byte. Para nuestro caso, como es un reto básico, debemos analizar cada 8 bits, ya que así obtenemos bytes que posteriormente podemos interpretar según el formato de los datos.
 
 ---
 
-## 3. Identificación del archivo
+<p align="center">
+  <img src="assets/image-20260915184812-nns0ikj.png" alt="Configuración de From Binary en CyberChef" />
+</p>
 
-Una vez obtenidos los bytes, utilizamos `file` para determinar qué tipo de archivo tenemos realmente.
+En el resultado vemos muchos caracteres que no significan nada si no se evalúan de otra forma. Para ello le damos a guardar el contenido en un archivo.
+
+<p align="center">
+  <img src="assets/image-20260917104541-78f3sk3.png" alt="Guardar el resultado de CyberChef" />
+</p>
+
+<p align="center">
+  <img src="assets/image-20260917103250-dbendat.png" alt="Resultado obtenido en CyberChef" />
+</p>
+
+Y ahí está: el archivo que descarguemos nos aparece en formato `.jpg`, lo que nos indica que los datos corresponden a una imagen.
+
+Para confirmar lo último, ejecutamos `file` para saber con seguridad el tipo de archivo que tenemos. En este caso lo nombramos `resultado.bin` ya que viene de un binario.
 
 ```bash
-file resultado.bin
-```
-
-Salida:
-
-```text
+[alonzzo_finn@parrot]─[~/Desktop/Pico_Gym/Forensics/Binary_digits]
+└──╼ $ file resultado.bin
 resultado.bin: JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1,
 segment length 16, baseline, precision 8, 800x500, components 3
 ```
 
-El resultado confirma que los bytes corresponden a una **imagen JPEG**, independientemente de que el archivo se llame `resultado.bin`.
+Y el resultado lo confirma: es una imagen.
 
----
-
-## 4. Análisis de la cabecera JPEG
-
-También podemos verificar manualmente los primeros bytes del archivo.
+Si aún no estamos seguros de lo que tenemos, podemos inspeccionar los primeros bits del archivo `.bin` para verificar el formato:
 
 ```bash
-head -c 50 digits.bin
+user:~$ head -c 50 digits.bin
+Output: 11111111110110001111111111100000000000000001000001
 ```
 
-Por ejemplo, obtenemos:
-
-```text
-11111111110110001111111111100000000000000001000001
-```
-
-Tomamos los primeros 32 bits y los agrupamos en bloques de ocho:
+Al pasar los primeros 32 bits, separándolos de 8 en 8, tenemos:
 
 ```text
 11111111 11011000 11111111 11100000
 ```
 
-Convertimos cada byte a hexadecimal:
+Que al pasarlo a base 16 tenemos:
 
 ```text
 FF D8 FF E0
 ```
 
-Los primeros bytes de un archivo JPEG válido contienen una firma característica que comienza con:
+Los creadores del formato `JPEG` establecieron por estándar que todo archivo `JPEG` válido debe comenzar con los bytes hexadecimales `FF D8 FF`.
 
-```text
-FF D8 FF
-```
-
-Por ello, la secuencia obtenida es consistente con un archivo JPEG.
+Cuando el comando `file` lee esos primeros bytes, puede identificar que los datos son compatibles con una imagen `JPEG`.
 
 ---
 
-## 5. Visualización de la imagen
+Luego, al ejecutar un `xdg-open` a este archivo, nos muestra la siguiente imagen:
 
-Podemos abrir el archivo utilizando la aplicación predeterminada del sistema:
+<p align="center">
+  <img src="assets/image-20260917105032-60p57og.png" alt="Imagen obtenida al abrir el archivo JPEG" />
+</p>
 
-```bash
-xdg-open resultado.bin
-```
-
-El sistema identifica el contenido como una imagen JPEG y la abre con el visor correspondiente.
-
-![Imagen obtenida](assets/image-20260917105032-60p57og.png)
-
-La imagen contiene la flag:
+Esto nos muestra la flag del reto:
 
 ```text
 picoCTF{h1dd3n_1n_th3_b1n4ry_cc2099d30}
@@ -122,196 +97,140 @@ picoCTF{h1dd3n_1n_th3_b1n4ry_cc2099d30}
 
 ---
 
-# 🔄 Método alternativo: Python
+## 🔄 Otra forma de resolverlo
 
-También podemos realizar todo el proceso mediante Python.
+En vez de emplear CyberChef, que no está mal, podemos elaborar un código en Python que lea el archivo `.bin`, identifique espacios y saltos de línea, los pueda eliminar y nos permita quedarnos solo con el contenido.
 
-El objetivo del script es:
+Luego podemos hacer que se evalúe el archivo en cadenas de 8 caracteres y convertir cada cadena binaria a su correspondiente valor de byte.
 
-1. Leer el archivo como texto.
-2. Eliminar espacios y saltos de línea.
-3. Dividir la cadena en grupos de 8 bits.
-4. Convertir cada grupo de binario a un entero.
-5. Convertir esos valores a bytes.
-6. Guardar los bytes resultantes en un archivo binario.
+Finalmente, se guarda en un nuevo archivo que llamaremos `resultado.bin`.
 
 ```python
 with open("file.bin", "r") as f:
     bits = f.read().replace(" ", "").strip()
 
-byte_data = bytes(
-    int(bits[i:i + 8], 2)
-    for i in range(0, len(bits), 8)
-)
+byte_data = bytes(int(bits[i : i + 8], 2) for i in range(0, len(bits), 8))
 
 with open("output.bin", "wb") as f:
     f.write(byte_data)
 ```
 
-### Explicación
+### 💻 Explicación del código
 
-#### `with open(...)`
+- `with`: Es una sentencia que se encarga de los recursos que se quieran emplear en un código. Estos se **cierran o liberan de manera garantizada** una vez que se terminan de usar, **incluso** si ocurren **errores** o **excepciones** dentro del bloque de código.
+- `open`: Abre un archivo que se encuentre en el directorio de trabajo. La opción `r` indica que el programa leerá el contenido en **texto plano**. La expresión `as f` asigna el archivo abierto a la variable `f`.
+- `f.read`: Lee todo el contenido del archivo de golpe y lo devuelve como una sola cadena de texto (*string*).
+- `.replace(" ", "")`: Es un método de cadenas de texto. Busca todos los espacios `" "` dentro del texto leído y los **elimina** (los reemplaza por nada `""`).
 
-Abre el archivo y garantiza que el recurso sea cerrado correctamente al terminar el bloque.
+  Es decir, si tuviéramos:
 
-#### `read()`
+  ```text
+  001 0111 11
+  ```
 
-Lee todo el contenido del archivo como una cadena de texto.
+  la salida sería:
 
-#### `.replace(" ", "")`
+  ```text
+  001011111
+  ```
 
-Elimina los espacios existentes entre los bits.
+- `.strip()`: Elimina espacios en blanco, tabulaciones o **saltos de línea** (`\n`) que queden sueltos al mero inicio o al final de todo el archivo.
+- `bits =`: Es la variable donde se van a guardar todos estos cambios.
+- `len(bits)`: Cuenta cuántos caracteres (`0` y `1`) tiene la cadena en total.
+- `range(0, len(bits), 8)`: Genera una secuencia de números empezando desde `0` hasta la cantidad de caracteres leída por `len()`, avanzando de 8 en 8.
+- `bits[i : i+8]`: Es un **slicing** (recorte) de texto. Lo que hace es tomar un fragmento de la cadena desde la posición `i` hasta `i+8`. Esto se repetirá con el bucle `for`.
+- `int(..., 2)`: La función `int()` **convierte texto a número**. El segundo argumento `2` le indica a Python que el texto está en base 2 (**binario**). De esta manera, convierte:
 
-Por ejemplo:
+  ```text
+  01011100
+  ```
 
-```text
-001 0111 11
-```
+  en el número correspondiente:
 
-se convierte en:
+  ```text
+  92
+  ```
 
-```text
-001011111
-```
+- `bytes(...)`: Toma los valores enteros y los convierte en un objeto de **bytes reales de Python**. Cada entero se transforma en un byte. Solo veamos algunos de los primeros elementos de esta variable:
 
-#### `.strip()`
+  ```python
+  b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00...'
+  ```
 
-Elimina espacios en blanco y saltos de línea que puedan encontrarse al principio o al final de la cadena.
-
-#### `len(bits)`
-
-Obtiene la cantidad total de bits disponibles.
-
-#### `range(0, len(bits), 8)`
-
-Permite recorrer la cadena avanzando de ocho en ocho posiciones.
-
-#### `bits[i:i + 8]`
-
-Realiza un *slicing* para obtener un grupo de ocho bits.
-
-Por ejemplo:
-
-```text
-01011100
-```
-
-#### `int(..., 2)`
-
-Convierte una cadena representada en base 2 a un número entero.
-
-```python
-int("01011100", 2)
-```
-
-produce:
-
-```text
-92
-```
-
-#### `bytes(...)`
-
-Convierte los valores enteros obtenidos en una secuencia de bytes.
-
-Una representación parcial podría verse como:
-
-```python
-b'\xff\xd8\xff\xe0\x00\x10JFIF...'
-```
-
-La `b` indica que estamos trabajando con una secuencia de bytes.
-
-#### `open(..., "wb")`
-
-El modo `wb` significa **Write Binary**. Permite escribir los bytes directamente en el archivo sin tratarlos como texto.
-
-#### `f.write(byte_data)`
-
-Escribe los bytes obtenidos en `output.bin`.
+  La `b` que antecede el contenido señala que es una secuencia de **bytes puros**.
+- `open(..., "wb")`: Abre el archivo `output.bin` (lo crea en caso de que no exista) y el modo `wb` significa **Escritura Binaria** (**Write Binary**). Es decir, aquí sí se van a guardar datos binarios puros, no texto.
+- `f.write(byte_data)`: Toma los bytes reales que fabricamos en el paso anterior y los escribe directamente en el archivo `output.bin`.
 
 ---
 
-## 6. Ejecución en una sola línea
-
-El mismo proceso puede realizarse directamente desde la terminal:
+En caso de tener facilidad para ejecutar dicho script por la terminal de Linux, puedo hacerlo de la siguiente manera:
 
 ```bash
 python3 -c 'bits=open("file.bin").read().replace(" ","").strip(); open("resultado.bin","wb").write(bytes(int(bits[i:i+8],2) for i in range(0,len(bits),8)))'
 ```
 
-Posteriormente podemos verificar el resultado:
+Luego, después de obtener el último archivo, mostrará el mismo formato `JPEG`, confirmándolo con `file`:
 
 ```bash
 file resultado.bin
 ```
 
-La salida debería identificar nuevamente el archivo como una imagen JPEG.
+---
+
+## ⚠️ Errores en el proceso
+
+Si cometemos el error de copiar el contenido del *output* de `CyberChef`, notaremos que al crear un archivo nuevo y pegarlo, el tipo de archivo será distinto al de un formato `JPEG`.
+
+`CyberChef` puede mostrar o interpretar los bytes resultantes de una operación como caracteres cuando la salida se visualiza como texto. Si esos bytes se copian desde el navegador y se pegan en otro lugar, el **navegador y el portapapeles pueden intentar tratar esos datos como texto Unicode/UTF-8**, alterando bytes que no representan caracteres de texto válidos.
+
+Veamos lo que señala el comando `file`:
+
+<p align="center">
+  <img src="assets/image-20260917131131-p7bu8y3.png" alt="Resultado incorrecto mostrado por file" />
+</p>
+
+### ⚠️ **Regla de oro en Forensics:**
+
+**Nunca uses editores** de texto como `nano`, `vim` o `notepad` para crear, copiar o guardar archivos binarios (imágenes, comprimidos, ejecutables). Siempre debes manejarlos desde scripts en modo escritura binaria (`wb`) o herramientas que preserven los bytes originales.
 
 ---
 
-# ⚠️ Errores comunes
+## 🛠️ Comandos empleados en la terminal
 
-Un error importante es copiar el contenido mostrado por CyberChef y pegarlo directamente en un editor de texto para crear el archivo.
+- `file`: Analiza la **cabecera** y estructura interna de un archivo para **determinar su tipo real**, sin importar qué extensión tenga su nombre.
+- `head`: Sirve para mostrar el inicio de un archivo o de una secuencia de datos en la terminal. Por defecto, imprime las primeras 10 líneas. Con `-c 50`, como en este reto, muestra los primeros 50 bytes.
+- `xdg-open`: Abre cualquier archivo o URL utilizando la **aplicación predeterminada** configurada en el sistema según su tipo MIME.
 
-Los archivos binarios no deben tratarse como texto normal. Al pasar bytes arbitrarios por editores, navegadores o portapapeles pueden producirse conversiones de caracteres o interpretaciones Unicode que alteren los datos originales.
+  Ejemplos:
 
-Una forma más segura es trabajar directamente con bytes mediante herramientas que soporten datos binarios.
-
-![Ejemplo del resultado incorrecto](assets/image-20260917131131-p7bu8y3.png)
-
-### Regla práctica en Forensics
-
-> Cuando trabajes con archivos binarios, evita manipularlos mediante editores de texto. Utiliza herramientas y scripts que preserven los bytes originales.
+  - `xdg-open https://google.com` → Abre el navegador predeterminado, ya sea Chrome, Firefox, etc.
+  - `xdg-open documento.pdf` → Abre el visor de PDF predeterminado, como Adobe, Okular, entre otros.
+- `python3`: Ejecuta un script que se adjunta en un archivo `.py` o de manera manual digitada en la línea de comandos.
 
 ---
 
-# 🛠️ Comandos utilizados
+## 🧠 Datos importantes
 
-### `file`
-
-Analiza el contenido de un archivo para identificar su tipo real, independientemente de la extensión.
-
-```bash
-file resultado.bin
-```
-
-### `head`
-
-Muestra el comienzo de un archivo.
-
-En este reto utilizamos:
-
-```bash
-head -c 50 digits.bin
-```
-
-para obtener los primeros 50 bytes/caracteres.
-
-### `xdg-open`
-
-Abre un archivo utilizando la aplicación predeterminada del sistema.
-
-```bash
-xdg-open resultado.bin
-```
-
-### `python3`
-
-Permite ejecutar el script utilizado para reconstruir los bytes originales.
+- `CyberChef` ejecuta de manera eficiente la salida del contenido y puede tratarla como un archivo descargable en caso de que los bytes resultantes correspondan a algún formato específico (como en este ejemplo `.jpg`).
+- `b'...'`: Señala que el contenido de la variable definida cuenta con **bytes puros**.
+- No se deben usar editores de texto para tratar con datos en binario. Estos pueden alterar el contenido original al causar una interpretación de los bytes como texto Unicode/UTF-8.
+- Es mejor siempre usar código que maneje datos binarios puros.
+- Cada formato de archivo puede tener una cabecera o *magic bytes* que ayudan a identificarlo, como el `FF D8 FF` del formato `JPEG`.
 
 ---
 
-# 🧠 Conceptos clave
+## 🔑 Conceptos clave
 
-- Un byte está compuesto por 8 bits.
-- Una secuencia de bits puede representar datos distintos de texto.
-- Las extensiones de archivo no determinan necesariamente su contenido real.
-- Las firmas o *magic bytes* permiten identificar determinados formatos.
-- Un JPEG comienza con la firma característica `FF D8 FF`.
-- `file` permite identificar formatos a partir de su contenido.
-- Los datos binarios deben manipularse procurando conservar los bytes originales.
-- Python puede utilizarse para convertir cadenas binarias en bytes reales.
+- **Bit:** unidad básica de información que puede tomar el valor `0` o `1`.
+- **Byte:** conjunto de 8 bits.
+- **ASCII:** el estándar ASCII original utiliza 7 bits y define 128 valores (`0–127`).
+- **Binario:** representación de información mediante bits.
+- **Magic bytes:** bytes característicos que ayudan a identificar el formato real de determinados archivos.
+- **JPEG:** formato de imagen cuya firma inicial típica es `FF D8 FF`.
+- **`file`:** utilidad de Linux que ayuda a identificar el tipo de un archivo a partir de su contenido.
+- **Python `bytes`:** objeto utilizado para representar una secuencia de bytes.
+- **Modo `wb`:** modo de apertura de archivos de Python para escritura binaria.
+- **Forense digital:** análisis de evidencias digitales para obtener e interpretar información sin alterar innecesariamente los datos originales.
 
 ---
 
