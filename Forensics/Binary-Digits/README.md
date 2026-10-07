@@ -1,16 +1,16 @@
-# 🔎 Binary Digits
+# Binary Digits
 
-## 📌 Información del reto
+## Información del reto
 
 - **Plataforma:** PicoCTF
 - **Categoría:** Forensics
 - **Reto:** Binary Digits
 
-## 📝 Enunciado
+## Enunciado
 
 > This file doesn't look like much... just a bunch of 1s and 0s. But maybe it's not just random noise. Can you recover anything meaningful from this?
 
-## 🔍 Opciones a tomar
+## Opciones a tomar
 
 - Al ser un archivo `.bin` podemos hacer un `cat` para verificar su contenido (que serían muchos bits de `0` y `1`).
 - Si pensamos en que hay algún mensaje en dicho archivo, tenemos que recordar algunas cosas:
@@ -97,7 +97,7 @@ picoCTF{h1dd3n_1n_th3_b1n4ry_cc2099d30}
 
 ---
 
-## 🔄 Otra forma de resolverlo
+## Otra forma de resolverlo
 
 En vez de emplear CyberChef, que no está mal, podemos elaborar un código en Python que lea el archivo `.bin`, identifique espacios y saltos de línea, los pueda eliminar y nos permita quedarnos solo con el contenido.
 
@@ -115,7 +115,7 @@ with open("output.bin", "wb") as f:
     f.write(byte_data)
 ```
 
-### 💻 Explicación del código
+### Explicación del código
 
 - `with`: Es una sentencia que se encarga de los recursos que se quieran emplear en un código. Estos se **cierran o liberan de manera garantizada** una vez que se terminan de usar, **incluso** si ocurren **errores** o **excepciones** dentro del bloque de código.
 - `open`: Abre un archivo que se encuentre en el directorio de trabajo. La opción `r` indica que el programa leerá el contenido en **texto plano**. La expresión `as f` asigna el archivo abierto a la variable `f`.
@@ -189,13 +189,13 @@ Veamos lo que señala el comando `file`:
   <img src="assets/image-20260917131131-p7bu8y3.png" alt="Resultado incorrecto mostrado por file" />
 </p>
 
-### ⚠️ **Regla de oro en Forensics:**
+### **Regla de oro en Forensics:**
 
 **Nunca uses editores** de texto como `nano`, `vim` o `notepad` para crear, copiar o guardar archivos binarios (imágenes, comprimidos, ejecutables). Siempre debes manejarlos desde scripts en modo escritura binaria (`wb`) o herramientas que preserven los bytes originales.
 
 ---
 
-## 🛠️ Comandos empleados en la terminal
+## Comandos empleados en la terminal
 
 - `file`: Analiza la **cabecera** y estructura interna de un archivo para **determinar su tipo real**, sin importar qué extensión tenga su nombre.
 - `head`: Sirve para mostrar el inicio de un archivo o de una secuencia de datos en la terminal. Por defecto, imprime las primeras 10 líneas. Con `-c 50`, como en este reto, muestra los primeros 50 bytes.
@@ -209,7 +209,7 @@ Veamos lo que señala el comando `file`:
 
 ---
 
-## 🧠 Datos importantes
+## Datos importantes
 
 - `CyberChef` ejecuta de manera eficiente la salida del contenido y puede tratarla como un archivo descargable en caso de que los bytes resultantes correspondan a algún formato específico (como en este ejemplo `.jpg`).
 - `b'...'`: Señala que el contenido de la variable definida cuenta con **bytes puros**.
@@ -219,7 +219,7 @@ Veamos lo que señala el comando `file`:
 
 ---
 
-## 🔑 Conceptos clave
+## Conceptos clave
 
 - **Bit:** unidad básica de información que puede tomar el valor `0` o `1`.
 - **Byte:** conjunto de 8 bits.
