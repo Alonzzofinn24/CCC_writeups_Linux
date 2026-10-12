@@ -2,7 +2,7 @@
 
 ---
 
-## 📌 Información del reto
+## Información del reto
 
 - **Plataforma:**  PicoCTF - CyLab
 - **Categoría:**  General Skills
@@ -10,13 +10,13 @@
 
 ---
 
-## 📝 Enunciado
+## Enunciado
 
 > Can you read the flag? I think you can!
 
 ---
 
-## 🔍 Opciones a tomar
+## Opciones a tomar
 
 - Primero, notamos que debemos conectarnos vía SSH a un entorno remoto en el que podremos interactuar.
 - Nos conectamos mediante las credenciales que nos da el reto y vemos que se nos cambia el entorno.
@@ -45,7 +45,7 @@ Para ello ejecutaremos el siguiente comando: `sudo -l`, pero antes de esto,  **�
 
 ---
 
-## 🔐 Comando `sudo`
+## Comando `sudo`
 
 Significa de manera abreviada  **"superuser do"** , y este permite que un usuario autorizado ejecute un comando con los privilegios de otro usuario, normalmente `root`.
 
@@ -72,7 +72,7 @@ Ojo: para saber cuál es el usuario actual podemos usar el comando `whoami` y us
 
 Esto demuestra algo importante, y es que `sudo` no te cambia de usuario al de raíz (`root`), sino lo que hace es ejecutar un comando en concreto con los **privilegios elevados** de este.
 
-### ❓ Entonces, ¿qué haría `sudo -l`?
+### Entonces, ¿qué haría `sudo -l`?
 
 La opción `-l` nos permite ver una lista de comandos permitidos (y prohibidos) para el usuario que realiza la llamada en el host actual.
 
@@ -128,7 +128,7 @@ Después de entender esto podemos verificar que el único comando que tenemos co
 
 ---
 
-## 💻 Comando `emacs`
+## Comando `emacs`
 
 Buscando información en internet, nos dice que este es uno de los editores de texto más antiguos, potentes y personalizables que existen para sistemas operativos basados en Linux.
 
@@ -152,8 +152,9 @@ Ejecutamos un `emacs -nw flag.txt` y nos arroja el siguiente resultado:
 
 ---
 
-## 🛠️ Comandos empleados en la terminal
+## Comandos empleados en la terminal
 
+- `ssh`: Se utilizó el comando para conectarse remotamente al servidor del reto con las credenciales proporcionadas.
 - `ls/ ls -la`: Lista los archivos presentes en un directorio. La opción `-la` permite ver de manera ordenada y detallada los metadatos (`-l`) de todos los archivos, incluso los ocultos (`-a`) en ese mismo directorio.
 - `sudo`: Permite ejecutar un comando con permisos de otro usuario, por lo general con uno que tenga privilegios elevados como `root`.
 - `sudo -l`: Muestra los comandos que el usuario actual tiene autorización para ejecutar en el mismo entorno.
@@ -161,15 +162,30 @@ Ejecutamos un `emacs -nw flag.txt` y nos arroja el siguiente resultado:
 
 ---
 
-## 🧠 Datos importantes
+## Datos importantes
 
-- 
+- **El propietario del archivo importa:** `flag.txt` pertenece a `root`, por lo que el usuario `ctf-player` no necesariamente puede leerlo directamente. Los permisos efectivos dependen del propietario, el grupo y los permisos asignados al archivo.
+- **`ls -la` ayuda al reconocimiento:** muestra archivos ocultos y detalles como permisos, propietario y grupo. Es útil para detectar archivos relevantes y entender por qué el acceso podría estar restringido.
+- **`sudo -l` revela los privilegios asignados:** permite comprobar qué comandos puede ejecutar el usuario mediante `sudo`. En este reto aparece la regla `(ALL) NOPASSWD: /bin/emacs`.
+- **`NOPASSWD` no significa acceso total por sí solo:** indica que el comando especificado puede ejecutarse mediante `sudo` sin pedir la contraseña del usuario. En este caso, el programa autorizado es `/bin/emacs`.
+- **El programa permitido es la pista decisiva:** `emacs` es un editor de texto capaz de abrir archivos. Al estar autorizado para ejecutarse con privilegios elevados, puede utilizarse para leer el archivo que el usuario normal no podía abrir.
+- **`-nw` evita la interfaz gráfica:** esta opción hace que Emacs funcione en la terminal, lo que resulta útil en una sesión SSH sin entorno gráfico.
+- **La idea central del reto es revisar los permisos de `sudo`:** no basta con comprobar si se puede leer un archivo directamente; también hay que analizar si existe un programa autorizado con privilegios que permita acceder a él.
 
 ---
 
-## 🔑 Conceptos clave
+## Conceptos clave
 
-- 
+- **`root`:** cuenta administrativa de Linux con amplios privilegios sobre el sistema y sus archivos.
+- **Propietario, grupo y permisos:** metadatos que determinan qué usuarios pueden leer, modificar o ejecutar un archivo o directorio.
+- **SSH (Secure Shell):** protocolo que permite conectarse de forma remota y segura a la máquina del reto.
+- **`sudo`:** herramienta que permite a un usuario autorizado ejecutar comandos con la identidad y los privilegios de otro usuario, normalmente `root`.
+- **`sudo -l`:** opción que lista los comandos que el usuario tiene permitido ejecutar mediante `sudo` en el equipo actual.
+- **`sudoers`:** configuración que define qué usuarios pueden ejecutar qué comandos mediante `sudo` y bajo qué condiciones.
+- **`NOPASSWD`:** directiva de `sudoers` que permite ejecutar los comandos indicados sin solicitar la contraseña.
+- **Escalada de privilegios:** situación en la que se aprovechan permisos o configuraciones para realizar acciones con privilegios superiores a los del usuario inicial. En este reto, el permiso de ejecutar Emacs mediante `sudo` es el elemento relevante.
+- **Emacs (`emacs -nw`):** editor de texto extensible; `-nw` indica que se ejecuta en la terminal y no en una ventana gráfica.
+- **Principio de mínimo privilegio:** buena práctica de seguridad que consiste en conceder solo los permisos necesarios. Autorizar editores u otras aplicaciones complejas mediante `sudo` puede generar riesgos si no se limita cuidadosamente su uso.
 
 ---
 
